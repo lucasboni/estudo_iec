@@ -1,0 +1,38 @@
+#PARA RODAR
+#ansible-playbook playbook.yml -u ubuntu --private-key iac-instancia.pem -i hosts.yml
+
+
+- hosts: terraform-ansible
+  tasks:
+  - name: Instalando o python3 e virtualenv
+    apt: 
+      pkg:
+      - python3
+      - virtualenv
+      update_cache: yes  #autalizar o repositorio
+    become: yes    #rodar como sudo
+  - name: Instalando depedencias com pip(Django e Django rest)
+    pip:
+      virtualenv: /home/ubuntu/venv   #liga a virtualenv e intalar dentro dela
+      name: 
+        - django
+        - djangorestframework
+  - name: Iniciando o projeto
+    shell: '. /home/ubuntu/venv/bin/activate; django-admin startproject setup /home/ubuntu/venv'  # o shell tomar cuidado pq nao da pra ele analisar o comando
+    ignore_errors: yes #ignora o erro pra nao parar, neste caso por que  o django nao deixa substituir o arquivo ja existente(cheque se pode ignorar mesmo)
+  - name: Alterando host dos settings
+    lineinfile:         #uma linha no arquivo
+      path: /home/ubuntu/venv/setup/settings.py
+      regexp: 'ALLOWED_HOSTS'           #buscar isso
+      line: 'ALLOWED_HOSTS = ["*"]'     #substituir por isso
+      backrefs: yes         #se ao achar oq quer nao faz nada no arquivo
+
+
+
+
+  #- name: criando o arquivo
+  #  copy: 
+  #    dest: /home/ubuntu/index.html
+  #    content: <h1> feito com terraform e ansible 2 </h1>
+  #- name: criando o servidor
+  #  shell: "nohup busybox httpd -f -p 8080 &"
